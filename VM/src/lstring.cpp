@@ -144,9 +144,8 @@ TString* luaS_buffinish(lua_State* L, TString* ts)
     return ts;
 }
 
-TString* luaS_newlstr(lua_State* L, const char* str, size_t l)
+static TString* findstrnode(lua_State* L, const char* str, size_t l, unsigned int h)
 {
-    unsigned int h = luaS_hash(str, l);
     for (TString* el = L->global->strt.hash[lmod(h, L->global->strt.size)]; el != NULL; el = el->next)
     {
         if (el->len == l && (memcmp(str, getstr(el), l) == 0))
@@ -157,7 +156,22 @@ TString* luaS_newlstr(lua_State* L, const char* str, size_t l)
             return el;
         }
     }
+    return nullptr; // not found
+}
+
+TString* luaS_newlstr(lua_State* L, const char* str, size_t l)
+{
+    unsigned int h = luaS_hash(str, l);
+    TString* el = findstrnode(L, str, l, h);
+    if (el)
+        return el;
     return newlstr(L, str, l, h); // not found
+}
+
+TString* luaS_assumelstr(lua_State* L, const char* str, size_t l)
+{
+    unsigned int h = luaS_hash(str, l);
+    return findstrnode(L, str, l, h);
 }
 
 static bool unlinkstr(lua_State* L, TString* ts)

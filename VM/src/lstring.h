@@ -14,6 +14,7 @@
 #define sizestring(len) (offsetof(TString, data) + len + 1)
 
 #define luaS_new(L, s) (luaS_newlstr(L, s, strlen(s)))
+#define luaS_assume(L, s) (luaS_assumelstr(L, s, strlen(s)))
 #define luaS_newliteral(L, s) (luaS_newlstr(L, "" s, (sizeof(s) / sizeof(char)) - 1))
 
 #define luaS_fix(s) l_setbit((s)->marked, FIXEDBIT)
@@ -23,6 +24,7 @@ LUAI_FUNC unsigned int luaS_hash(const char* str, size_t len);
 LUAI_FUNC void luaS_resize(lua_State* L, int newsize);
 
 LUAI_FUNC TString* luaS_newlstr(lua_State* L, const char* str, size_t l);
+LUAI_FUNC TString* luaS_assumelstr(lua_State* L, const char* str, size_t l);
 LUAI_FUNC void luaS_free(lua_State* L, TString* ts, struct lua_Page* page);
 
 LUAI_FUNC TString* luaS_bufstart(lua_State* L, size_t size);
