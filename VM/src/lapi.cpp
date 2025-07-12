@@ -17,6 +17,8 @@
 
 LUAU_DYNAMIC_FASTFLAGVARIABLE(LuauUnrefExisting, false)
 
+LUAU_DYNAMIC_FASTFLAGVARIABLE(LuauRawgetfieldZeroAlloc, false);
+
 /*
  * This file contains most implementations of core Lua APIs from lua.h.
  *
@@ -750,8 +752,24 @@ int lua_rawgetfield(lua_State* L, int idx, const char* k)
     StkId t = index2addr(L, idx);
     api_check(L, ttistable(t));
     TValue key;
-    setsvalue(L, &key, luaS_new(L, k));
-    setobj2s(L, L->top, luaH_getstr(hvalue(t), tsvalue(&key)));
+    if (DFFlag::LuauRawgetfieldZeroAlloc)
+    {
+        TString* ts = luaS_assume(L, k);
+        if (!ts)
+        {
+            setobj2s(L, L->top, luaO_nilobject);
+        }
+        else
+        {
+            setsvalue(L, &key, ts);
+            setobj2s(L, L->top, luaH_getstr(hvalue(t), tsvalue(&key)));
+        }
+    }
+    else
+    {
+        setsvalue(L, &key, luaS_new(L, k));
+        setobj2s(L, L->top, luaH_getstr(hvalue(t), tsvalue(&key)));
+    }
     api_incr_top(L);
     return ttype(L->top - 1);
 }
